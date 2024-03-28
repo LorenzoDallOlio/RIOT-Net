@@ -2,7 +2,7 @@
 
 
 
-### Preprocessing
+### Step 1: Preprocessing
 
 Our pipeline requires 2 csv to start: 
  - dataset\_raw\.csv: containing the raw counts on which we will perform the analysis, in the shape of N_patients (on the rows) x N_genes (on the columns)
@@ -23,10 +23,16 @@ At this point, the standard DESeq2 pipeline to extract Variance Stabilizing Tran
 
 
 
-### Preparing data for RIOT-Net
+
+### Step2: RIOT-Net core
 
 
-Load the data, properly load and order the metadata and optionally load a gene name reference file, this last could be used to convert gene names from specific codes to common names.
+
+
+##### Preparing data for RIOT-Net
+
+
+Load the data, properly load and order the metadata and optionally (but recommended) load a gene name reference file, this last could be used to convert gene names from specific codes to common names.
 
 
 
@@ -46,5 +52,16 @@ To correctly run the analysis we need to input a value for the fit\_threshold pa
 The last part is to decide the criteria to select the best soft threshold candidate, in order to not use too high values (that would end up cancelling also large part of the signal, a.k.a. significant correlations) some would suggest to use the smallest value whose fit reaches an R^2 score above the parameter fit\_threshold.
 
 
+##### Clusters formation
 
-### RIOT-Net core
+A Dimensionality reduction (UMAP specificially) is applied to (1-soft_threshold_correlation_matrix) (in order to have a measure behaving like a metric, with 0 for identical elements on 1 for the furthest) using the "_precomputed_" option in metrics.
+
+Afterwards, HDBSCAN (highly performant on lower dimensional spaces) is runned on the lower dimensional embedding outputted by UMAP, HDBSCAN should be tuned by varying the cluster min size and min samples parameters at least, until visual inspection of clusters in the lower dimensional space seems good enough.
+
+
+# Step 3: find_drug_targeted_genes
+At this point, RIOT-Net requires the third step, and R script to find the drug targeted genes (by scraping online freely accessible database DRUG-bank) and their interactors (by scraping online freely accesible database STRING).
+
+
+# Step 4: tests_and_plots
+RIOT Net then concludes with python script 4 by testing which clusters are significantly enriched in drug-targeted genes, and then performing plots and biological processes enrichment tests using the freely accessible APIs of PANTHER-db.
